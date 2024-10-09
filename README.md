@@ -7,7 +7,7 @@ The JackToken Staking Contract allows holders of $JACK tokens to stake their tok
 
 Next commands are available
 ```shell
-npx hardhat help
+npx hardhat compile
 npx hardhat test
 npx hardhat node
 npx hardhat run scripts/deploy.js --network localhost
