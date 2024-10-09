@@ -1,13 +1,14 @@
-# Sample Hardhat Project
+# JackToken Staking Contract
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+Overview
 
-Try running some of the following tasks:
+The JackToken Staking Contract allows holders of $JACK tokens to stake their tokens and earn rewards. It supports flexible withdrawals, and rewards APR.
 
+
+Next commands are available
 ```shell
 npx hardhat help
 npx hardhat test
-REPORT_GAS=true npx hardhat test
 npx hardhat node
-npx hardhat run scripts/deploy.js
+npx hardhat run scripts/deploy.js --network localhost
 ```
