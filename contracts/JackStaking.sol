@@ -103,22 +103,19 @@ contract JackStaking is Staking20, Ownable {
 
     function getStakerAtIndex(
         uint index
-    ) public view returns (ExtendedStaker memory) {
+    ) public view returns (ExtendedStaker memory e) {
         address a = stakersArray[index];
         Staker memory s = stakers[a];
-        ExtendedStaker memory e;
         e.staker = a;
         e.amountStaked = s.amountStaked;
         e.timeOfLastUpdate = s.timeOfLastUpdate;
-        return e;
     }
 
     function setMinStakeLockTime(uint80 _minStakeLockTime) external {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
-        uint80 oldMinStakeLockTime = minStakeLockTime;
+        emit MinStakeTimeChanged(minStakeLockTime, minStakeLockTime);
         minStakeLockTime = _minStakeLockTime;
-        emit MinStakeTimeChanged(oldMinStakeLockTime, minStakeLockTime);
     }
 }
