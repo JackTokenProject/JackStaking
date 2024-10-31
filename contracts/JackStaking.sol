@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
-import "@thirdweb-dev/contracts/extension/Staking20.sol";
-import "@thirdweb-dev/contracts/eip/interface/IERC20.sol";
-import "@thirdweb-dev/contracts/eip/interface/IERC20Metadata.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {Staking20} from "@thirdweb-dev/contracts/extension/Staking20.sol";
+import {IERC20} from "@thirdweb-dev/contracts/eip/interface/IERC20.sol";
+import {IERC20Metadata} from "@thirdweb-dev/contracts/eip/interface/IERC20Metadata.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract JackStaking is Staking20, Ownable {
     address public rewardTokenHolder;
