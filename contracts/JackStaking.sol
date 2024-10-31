@@ -91,7 +91,7 @@ contract JackStaking is Staking20, Ownable {
     }
 
     function getRewardTokenBalance()
-        external
+        public
         view
         override
         returns (uint256 _rewardsAvailableInContract)
@@ -99,6 +99,15 @@ contract JackStaking is Staking20, Ownable {
         _rewardsAvailableInContract = IERC20(stakingToken).balanceOf(
             rewardTokenHolder
         );
+    }
+
+    function _claimRewards() internal virtual override {
+       uint256 rewardsToClaim = stakers[_stakeMsgSender()].unclaimedRewards + _calculateRewards(_stakeMsgSender());
+        require(
+            getRewardTokenBalance() >= rewardsToClaim,
+            "Not enough funds in the contract"
+        );
+        super._claimRewards();
     }
 
     function _stake(uint256 _amount) internal virtual override {
@@ -146,7 +155,7 @@ contract JackStaking is Staking20, Ownable {
         minStakeLockTime = _minStakeLockTime;
     }
 
-     function setMinStakeAmount(uint256 _minStakeAmount) external {
+    function setMinStakeAmount(uint256 _minStakeAmount) external {
         require(_minStakeAmount != 0, "Invalid _minStakeAmount!");
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
