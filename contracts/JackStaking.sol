@@ -13,16 +13,21 @@ contract JackStaking is Staking20, Ownable {
         uint80 minStakeLockTime
     );
 
+    event RewardTokenHolderChanged(
+        address oldRewardTokenHolder,
+        address newRewardTokenHolder
+    );
+
     struct ExtendedStaker {
         address staker;
         uint128 timeOfLastUpdate;
         uint256 amountStaked;
     }
 
-    error MinLockTimeError(uint current, uint needed);
-
+    
+    uint80 constant public maxStakeLockTime = 2592000;
     uint80 public minStakeLockTime;
-    mapping(address => uint80) private lastStakeTimes;
+    mapping(address staker => uint80) private lastStakeTimes;
 
     constructor(
         uint80 _timeUnit,
@@ -41,14 +46,22 @@ contract JackStaking is Staking20, Ownable {
         )
         Ownable()
     {
+
+        require(_timeUnit != 0, "Invalid _timeUnit!");
+        require(_rewardRatioNumerator != 0, "Invalid _rewardRatioNumerator!");
+        require(_rewardRatioDenominator != 0, "Invalid _rewardRatioDenominator!");
+        require(_minStakeLockTime != 0, "Invalid _minStakeLockTime!");
+        require(_rewardTokenHolder != address(0), "Invalid _rewardTokenHolder!");
         _setStakingCondition(
             _timeUnit,
             _rewardRatioNumerator,
             _rewardRatioDenominator
         );
+
         minStakeLockTime = _minStakeLockTime;
         rewardTokenHolder = _rewardTokenHolder;
     }
+
     /**
      *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.
      *
@@ -89,7 +102,6 @@ contract JackStaking is Staking20, Ownable {
 
     function canWithdraw(address staker) public view returns (bool) {
         uint80 lastStakeTime = lastStakeTimes[staker];
-        //console.log("_withdraw call ", lastStakeTime);
         if (uint80(block.timestamp) > (lastStakeTime + minStakeLockTime)) {
             return true;
         }
@@ -112,10 +124,20 @@ contract JackStaking is Staking20, Ownable {
     }
 
     function setMinStakeLockTime(uint80 _minStakeLockTime) external {
+        require(_minStakeLockTime > maxStakeLockTime, "Min lockTime exceeded!");
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
         emit MinStakeTimeChanged(minStakeLockTime, minStakeLockTime);
         minStakeLockTime = _minStakeLockTime;
+    }
+
+    function setRewardTokenHolder(address _rewardTokenHolder) external {
+        require(_rewardTokenHolder != address(0), "Invalid _rewardTokenHolder!");
+        if (!_canSetStakeConditions()) {
+            revert("Not authorized");
+        }
+        emit RewardTokenHolderChanged(rewardTokenHolder, _rewardTokenHolder);
+        rewardTokenHolder = _rewardTokenHolder;
     }
 }
