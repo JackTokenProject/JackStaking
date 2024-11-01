@@ -23,6 +23,16 @@ contract JackStaking is Staking20, Ownable {
         address newRewardTokenHolder
     );
 
+    error MinStakeAmountError();
+    error TimeUnitError();
+    error RewardRatioError();
+    error MinStakeLockTimeError();
+    error RewardTokenHolderError();
+    error InsufficientBalanceError();
+    error StakeAmountError();
+    error NotAuthorized();
+    error CantWithdraw();
+
     struct ExtendedStaker {
         address staker;
         uint128 timeOfLastUpdate;
@@ -53,18 +63,30 @@ contract JackStaking is Staking20, Ownable {
         )
         Ownable()
     {
-        require(_minStakeAmount != 0, "Invalid _minStakeAmount!");
-        require(_timeUnit != 0, "Invalid _timeUnit!");
-        require(_rewardRatioNumerator != 0, "Invalid _rewardRatioNumerator!");
-        require(
-            _rewardRatioDenominator != 0,
-            "Invalid _rewardRatioDenominator!"
-        );
-        require(_minStakeLockTime != 0, "Invalid _minStakeLockTime!");
-        require(
-            _rewardTokenHolder != address(0),
-            "Invalid _rewardTokenHolder!"
-        );
+        if (_minStakeAmount == 0) {
+            revert MinStakeAmountError();
+        }
+
+        if (_timeUnit == 0) {
+            revert TimeUnitError();
+        }
+
+        if (_rewardRatioNumerator == 0) {
+            revert RewardRatioError();
+        }
+
+        if (_rewardRatioDenominator == 0) {
+            revert RewardRatioError();
+        }
+
+        if (_minStakeLockTime == 0 || _minStakeLockTime > maxStakeLockTime) {
+            revert MinStakeLockTimeError();
+        }
+
+        if (_rewardTokenHolder == address(0)) {
+            revert RewardTokenHolderError();
+        }
+
         _setStakingCondition(
             _timeUnit,
             _rewardRatioNumerator,
@@ -102,25 +124,28 @@ contract JackStaking is Staking20, Ownable {
     }
 
     function _claimRewards() internal virtual override {
-       uint256 rewardsToClaim = stakers[_stakeMsgSender()].unclaimedRewards + _calculateRewards(_stakeMsgSender());
-        require(
-            getRewardTokenBalance() >= rewardsToClaim,
-            "Not enough funds in the contract"
-        );
+        uint256 rewardsToClaim = stakers[_stakeMsgSender()].unclaimedRewards +
+            _calculateRewards(_stakeMsgSender());
+
+        if (getRewardTokenBalance() < rewardsToClaim) {
+            revert InsufficientBalanceError();
+        }
         super._claimRewards();
     }
 
     function _stake(uint256 _amount) internal virtual override {
-        require(_amount >= minStakeAmount, "Staking less than minStakeAmount");
+        if (_amount < minStakeAmount) {
+            revert StakeAmountError();
+        }
         lastStakeTimes[_stakeMsgSender()] = uint80(block.timestamp);
         super._stake(_amount);
     }
 
     function _withdraw(uint256 _amount) internal virtual override {
-        uint80 lastStakeTime = lastStakeTimes[_stakeMsgSender()];
-        if (uint80(block.timestamp) > (lastStakeTime + minStakeLockTime)) {
-            super._withdraw(_amount);
+        if (!canWithdraw(_stakeMsgSender())) {
+            revert CantWithdraw();
         }
+        super._withdraw(_amount);
     }
 
     function canWithdraw(address staker) public view returns (bool) {
@@ -147,30 +172,34 @@ contract JackStaking is Staking20, Ownable {
     }
 
     function setMinStakeLockTime(uint80 _minStakeLockTime) external {
-        require(_minStakeLockTime > maxStakeLockTime, "Min lockTime exceeded!");
+        if (_minStakeLockTime == 0 || _minStakeLockTime > maxStakeLockTime) {
+            revert MinStakeLockTimeError();
+        }
+
         if (!_canSetStakeConditions()) {
-            revert("Not authorized");
+            revert NotAuthorized();
         }
         emit MinStakeTimeChanged(minStakeLockTime, minStakeLockTime);
         minStakeLockTime = _minStakeLockTime;
     }
 
     function setMinStakeAmount(uint256 _minStakeAmount) external {
-        require(_minStakeAmount != 0, "Invalid _minStakeAmount!");
+        if (_minStakeAmount == 0) {
+            revert MinStakeAmountError();
+        }
         if (!_canSetStakeConditions()) {
-            revert("Not authorized");
+            revert NotAuthorized();
         }
         emit MinStakeAmountChanged(minStakeAmount, _minStakeAmount);
         minStakeAmount = _minStakeAmount;
     }
 
     function setRewardTokenHolder(address _rewardTokenHolder) external {
-        require(
-            _rewardTokenHolder != address(0),
-            "Invalid _rewardTokenHolder!"
-        );
+        if (_rewardTokenHolder == address(0)) {
+            revert RewardTokenHolderError();
+        }
         if (!_canSetStakeConditions()) {
-            revert("Not authorized");
+            revert NotAuthorized();
         }
         emit RewardTokenHolderChanged(rewardTokenHolder, _rewardTokenHolder);
         rewardTokenHolder = _rewardTokenHolder;
