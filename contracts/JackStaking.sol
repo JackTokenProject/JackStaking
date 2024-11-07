@@ -1,11 +1,12 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 import {Staking20} from "@thirdweb-dev/contracts/extension/Staking20.sol";
 import {IERC20} from "@thirdweb-dev/contracts/eip/interface/IERC20.sol";
 import {IERC20Metadata} from "@thirdweb-dev/contracts/eip/interface/IERC20Metadata.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-contract JackStaking is Staking20, Ownable {
+contract JackStaking is Staking20, Ownable2Step {
     address public rewardTokenHolder;
 
     event MinStakeTimeChanged(
@@ -39,7 +40,7 @@ contract JackStaking is Staking20, Ownable {
         uint256 amountStaked;
     }
 
-    uint80 public constant maxStakeLockTime = 2592000;
+    uint80 public constant maxStakeLockTime = 30 days;
     uint80 public minStakeLockTime;
     mapping(address staker => uint80) private lastStakeTimes;
 
@@ -149,11 +150,7 @@ contract JackStaking is Staking20, Ownable {
     }
 
     function canWithdraw(address staker) public view returns (bool) {
-        uint80 lastStakeTime = lastStakeTimes[staker];
-        if (uint80(block.timestamp) > (lastStakeTime + minStakeLockTime)) {
-            return true;
-        }
-        return false;
+        return (uint80(block.timestamp) > (lastStakeTimes[staker] + minStakeLockTime));
     }
 
     // Returns whether staking restrictions can be set in given execution context.
