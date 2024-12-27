@@ -10,18 +10,18 @@ contract JackStaking is Staking20, Ownable2Step {
     address public rewardTokenHolder;
 
     event MinStakeTimeChanged(
-        uint80 oldMinStakeLockTime,
-        uint80 newMinStakeLockTime
+        uint80 indexed oldMinStakeLockTime,
+        uint80 indexed newMinStakeLockTime
     );
 
     event MinStakeAmountChanged(
-        uint256 oldMinStakeAmount,
-        uint256 newMinStakeAmount
+        uint256 indexed oldMinStakeAmount,
+        uint256 indexed newMinStakeAmount
     );
 
     event RewardTokenHolderChanged(
-        address oldRewardTokenHolder,
-        address newRewardTokenHolder
+        address indexed oldRewardTokenHolder,
+        address indexed newRewardTokenHolder
     );
 
     error MinStakeAmountError();

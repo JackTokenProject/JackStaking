@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { time } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
+const { ethers } = require("hardhat");
 
 describe("JackStaking", function () {
     let owner;
@@ -29,6 +30,7 @@ describe("JackStaking", function () {
             rewardHolder.address,
             "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
             60 * 5,
+            100000000000,
         ];
 
         jackStaking = await ethers.deployContract("JackStaking", params);
@@ -56,15 +58,17 @@ describe("JackStaking", function () {
 
     it("Check Withdraw", async function () {
         await jackStaking.stake(ethers.parseUnits("10000", "ether"));
+        await time.increaseTo(parseInt(new Date().valueOf() / 1000 + 3601));
         expect(await jackStaking.withdraw(ethers.parseUnits("10000", "ether")))
             .to.not.be.reverted;
     });
 
     it("Check Withdraw Correct Balance", async function () {
         await jackStaking.stake(ethers.parseUnits("10000", "ether"));
+        await time.increaseTo(parseInt(new Date().valueOf() / 1000 + 13601));
         await jackStaking.withdraw(ethers.parseUnits("10000", "ether"));
         expect(await jackToken.balanceOf(owner.address)).to.equal(
-            ethers.parseUnits("0", "ether")
+            ethers.parseUnits("10000", "ether")
         );
     });
 
