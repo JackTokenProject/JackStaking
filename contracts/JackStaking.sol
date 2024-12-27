@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 import {Staking20} from "@thirdweb-dev/contracts/extension/Staking20.sol";
+import {CurrencyTransferLib} from "@thirdweb-dev/contracts/lib/CurrencyTransferLib.sol";
 import {IERC20} from "@thirdweb-dev/contracts/eip/interface/IERC20.sol";
 import {IERC20Metadata} from "@thirdweb-dev/contracts/eip/interface/IERC20Metadata.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 contract JackStaking is Staking20, Ownable2Step {
+
     address public rewardTokenHolder;
 
     event MinStakeTimeChanged(
@@ -106,7 +108,13 @@ contract JackStaking is Staking20, Ownable2Step {
      *
      */
     function _mintRewards(address _staker, uint256 _rewards) internal override {
-        IERC20(stakingToken).transferFrom(rewardTokenHolder, _staker, _rewards);
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            stakingToken,
+            rewardTokenHolder,
+            _staker,
+            _rewards,
+            address(0)
+        );
     }
 
     function totalStakers() public view returns (uint) {
@@ -150,7 +158,8 @@ contract JackStaking is Staking20, Ownable2Step {
     }
 
     function canWithdraw(address staker) public view returns (bool) {
-        return (uint80(block.timestamp) > (lastStakeTimes[staker] + minStakeLockTime));
+        return (uint80(block.timestamp) >
+            (lastStakeTimes[staker] + minStakeLockTime));
     }
 
     // Returns whether staking restrictions can be set in given execution context.
@@ -176,7 +185,7 @@ contract JackStaking is Staking20, Ownable2Step {
         if (!_canSetStakeConditions()) {
             revert NotAuthorized();
         }
-        emit MinStakeTimeChanged(minStakeLockTime, minStakeLockTime);
+        emit MinStakeTimeChanged(minStakeLockTime, _minStakeLockTime);
         minStakeLockTime = _minStakeLockTime;
     }
 
